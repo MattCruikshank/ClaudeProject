@@ -7,37 +7,43 @@
 
 <PageTitle>@SenderName - Tailmail</PageTitle>
 
-<h1>Messages from @SenderName</h1>
+<div class="chat-container">
+    <div class="chat-header">
+        <h1>Messages from @SenderName</h1>
+    </div>
 
-@if (!messages.Any())
-{
-    <p>No messages from @SenderName yet.</p>
-}
-else
-{
-    <div class="messages">
-        @foreach (var message in messages)
+    <div class="messages-container">
+        @if (!messages.Any())
         {
-            <div class="message-card">
-                <div class="message-header">
-                    <strong>@message.Sender</strong>
-                    <span class="timestamp">@FormatTimestamp(message.Timestamp)</span>
-                </div>
-                <div class="message-content">@message.Content</div>
+            <p>No messages from @SenderName yet.</p>
+        }
+        else
+        {
+            <div class="messages">
+                @foreach (var message in messages)
+                {
+                    <div class="message-card">
+                        <div class="message-header">
+                            <strong>@message.Sender</strong>
+                            <span class="timestamp">@FormatTimestamp(message.Timestamp)</span>
+                        </div>
+                        <div class="message-content">@message.Content</div>
+                    </div>
+                }
+                <div @ref="messagesEnd"></div>
             </div>
         }
-        <div @ref="messagesEnd"></div>
     </div>
-}
 
-<div class="reply-section">
-    <textarea class="reply-input"
-              @bind="replyMessage"
-              @bind:event="oninput"
-              @onkeydown="HandleKeyDown"
-              @onkeydown:preventDefault="preventEnter"
-              placeholder="Type your message to @SenderName..."></textarea>
-    <button class="send-button" @onclick="SendMessage">Send</button>
+    <div class="reply-section">
+        <textarea class="reply-input"
+                  @bind="replyMessage"
+                  @bind:event="oninput"
+                  @onkeydown="HandleKeyDown"
+                  @onkeydown:preventDefault="preventEnter"
+                  placeholder="Type your message to @SenderName..."></textarea>
+        <button class="send-button" @onclick="SendMessage">Send</button>
+    </div>
 </div>
 
 @code {
@@ -137,9 +143,44 @@ else
 }
 
 <style>
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 3.5rem);
+        position: fixed;
+        top: 3.5rem;
+        left: 250px;
+        right: 0;
+        bottom: 0;
+    }
+
+    @@media (max-width: 767.98px) {
+        .chat-container {
+            left: 0;
+        }
+    }
+
+    .chat-header {
+        padding: 1rem;
+        border-bottom: 1px solid #ddd;
+        background-color: white;
+    }
+
+    .chat-header h1 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
+    .messages-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        background-color: white;
+    }
+
     .messages {
-        margin-top: 20px;
-        padding-bottom: 120px;
+        display: flex;
+        flex-direction: column;
     }
 
     .message-card {
@@ -166,22 +207,11 @@ else
     }
 
     .reply-section {
-        position: fixed;
-        bottom: 0;
-        left: 250px;
-        right: 0;
-        background-color: white;
         padding: 15px;
         border-top: 1px solid #ddd;
+        background-color: white;
         display: flex;
         gap: 10px;
-        z-index: 1000;
-    }
-
-    @@media (max-width: 767.98px) {
-        .reply-section {
-            left: 0;
-        }
     }
 
     .reply-input {
@@ -192,6 +222,7 @@ else
         font-size: 16px;
         resize: vertical;
         min-height: 60px;
+        max-height: 120px;
     }
 
     .send-button {
