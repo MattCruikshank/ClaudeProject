@@ -1,0 +1,20 @@
+syntax = "proto2";
+
+option csharp_namespace = "Tailmail.Protos";
+
+package tailmail;
+
+service MessageService {
+  rpc SendMessage (MessageRequest) returns (MessageResponse);
+}
+
+message MessageRequest {
+  optional string sender = 1;
+  optional string content = 2;
+  optional int64 timestamp = 3;
+}
+
+message MessageResponse {
+  optional bool success = 1;
+  optional string message = 2;
+}
