@@ -48,7 +48,9 @@ else
 
     private void LoadMessages()
     {
-        messages = MessageStore.GetMessages().ToList();
+        messages = MessageStore.GetMessages()
+            .OrderBy(m => m.Timestamp)
+            .ToList();
     }
 
     private string FormatTimestamp(long timestamp)

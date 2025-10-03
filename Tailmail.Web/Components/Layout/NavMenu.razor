@@ -1,4 +1,9 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+@rendermode InteractiveServer
+@using Tailmail.Web.Services
+@inject MessageStore MessageStore
+@implements IDisposable
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">Tailmail.Web</a>
     </div>
@@ -10,10 +15,50 @@
     <nav class="flex-column">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> All
             </NavLink>
         </div>
 
+        @foreach (var sender in senders)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="@($"sender/{Uri.EscapeDataString(sender)}")">
+                    <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @sender
+                </NavLink>
+            </div>
+        }
     </nav>
 </div>
 
+@code {
+    private List<string> senders = new();
+
+    protected override void OnInitialized()
+    {
+        LoadSenders();
+        MessageStore.OnMessageAdded += OnMessageReceived;
+    }
+
+    private void OnMessageReceived()
+    {
+        InvokeAsync(() =>
+        {
+            LoadSenders();
+            StateHasChanged();
+        });
+    }
+
+    private void LoadSenders()
+    {
+        senders = MessageStore.GetMessages()
+            .Select(m => m.Sender)
+            .Distinct()
+            .OrderBy(s => s)
+            .ToList();
+    }
+
+    public void Dispose()
+    {
+        MessageStore.OnMessageAdded -= OnMessageReceived;
+    }
+}

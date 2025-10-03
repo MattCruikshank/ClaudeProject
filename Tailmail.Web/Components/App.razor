@@ -15,6 +15,32 @@
 <body>
     <Routes />
     <script src="_framework/blazor.web.js"></script>
+    <script>
+        let isUserScrolling = false;
+        let scrollTimeout;
+
+        window.addEventListener('wheel', function() {
+            isUserScrolling = true;
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                isUserScrolling = false;
+            }, 1000);
+        }, { passive: true });
+
+        window.addEventListener('touchmove', function() {
+            isUserScrolling = true;
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                isUserScrolling = false;
+            }, 1000);
+        }, { passive: true });
+
+        window.scrollToBottomIfNotDragging = function(element) {
+            if (!isUserScrolling) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+        };
+    </script>
 </body>
 
 </html>
