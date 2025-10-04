@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @using Tailmail.Web.Services
 @inject MessageStore MessageStore
+@inject IJSRuntime JSRuntime
 @implements IDisposable
 
 <PageTitle>Tailmail</PageTitle>
@@ -25,11 +26,13 @@ else
                 <div class="message-content">@message.Content</div>
             </div>
         }
+        <div @ref="messagesEnd"></div>
     </div>
 }
 
 @code {
     private List<Tailmail.Protos.MessageRequest> messages = new();
+    private ElementReference messagesEnd;
 
     protected override void OnInitialized()
     {
@@ -37,13 +40,31 @@ else
         MessageStore.OnMessageAdded += OnMessageReceived;
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await ScrollToBottom();
+    }
+
     private void OnMessageReceived()
     {
-        InvokeAsync(() =>
+        InvokeAsync(async () =>
         {
             LoadMessages();
             StateHasChanged();
+            await ScrollToBottom();
         });
+    }
+
+    private async Task ScrollToBottom()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("scrollToBottom", messagesEnd);
+        }
+        catch
+        {
+            // Ignore errors if JS interop isn't ready yet
+        }
     }
 
     private void LoadMessages()
