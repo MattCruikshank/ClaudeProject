@@ -1,7 +1,10 @@
 ﻿@page "/"
 @rendermode InteractiveServer
 @using Tailmail.Web.Services
+@using Microsoft.AspNetCore.Components
 @inject MessageStore MessageStore
+@inject NavigationService NavigationService
+@inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 @implements IDisposable
 
@@ -33,15 +36,21 @@ else
 @code {
     private List<Tailmail.Protos.MessageRequest> messages = new();
     private ElementReference messagesEnd;
+    private DotNetObjectReference<Home>? dotNetHelper;
 
     protected override void OnInitialized()
     {
         LoadMessages();
         MessageStore.OnMessageAdded += OnMessageReceived;
+        dotNetHelper = DotNetObjectReference.Create(this);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("setupNavigationKeys", dotNetHelper);
+        }
         await ScrollToBottom();
     }
 
@@ -80,9 +89,25 @@ else
         return dt.ToString("yyyy-MM-dd HH:mm:ss");
     }
 
+    [JSInvokable]
+    public void OnNavigationKey(bool moveUp)
+    {
+        var nextItem = NavigationService.GetNextItem("", moveUp);
+
+        if (nextItem == string.Empty)
+        {
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            Navigation.NavigateTo($"/sender/{Uri.EscapeDataString(nextItem)}");
+        }
+    }
+
     public void Dispose()
     {
         MessageStore.OnMessageAdded -= OnMessageReceived;
+        dotNetHelper?.Dispose();
     }
 }
 

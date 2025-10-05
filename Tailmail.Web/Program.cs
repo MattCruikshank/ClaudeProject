@@ -18,6 +18,7 @@ builder.Services.AddSingleton<MessageStore>();
 builder.Services.AddSingleton<SentMessageStore>();
 builder.Services.AddSingleton(new SettingsService(settingsFileName));
 builder.Services.AddSingleton<MessageSender>();
+builder.Services.AddSingleton<NavigationService>();
 
 // Load settings to get port configuration
 var settingsService = new SettingsService(settingsFileName);

@@ -1,9 +1,12 @@
 @page "/sender/{SenderName}"
 @rendermode InteractiveServer
 @using Tailmail.Web.Services
+@using Microsoft.AspNetCore.Components
 @inject MessageStore MessageStore
 @inject SentMessageStore SentMessageStore
 @inject MessageSender MessageSender
+@inject NavigationService NavigationService
+@inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 @implements IDisposable
 
@@ -76,6 +79,7 @@
         if (firstRender)
         {
             await JSRuntime.InvokeVoidAsync("setupEnterKeyHandler", textareaRef, dotNetHelper);
+            await JSRuntime.InvokeVoidAsync("setupNavigationKeys", dotNetHelper);
             await JSRuntime.InvokeVoidAsync("focusElement", textareaRef);
         }
         await ScrollToBottom();
@@ -136,6 +140,21 @@
     {
         await SendMessageWithContent(message);
         StateHasChanged();
+    }
+
+    [JSInvokable]
+    public void OnNavigationKey(bool moveUp)
+    {
+        var nextItem = NavigationService.GetNextItem(SenderName, moveUp);
+
+        if (nextItem == string.Empty)
+        {
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            Navigation.NavigateTo($"/sender/{Uri.EscapeDataString(nextItem)}");
+        }
     }
 
     private async Task SendMessage()

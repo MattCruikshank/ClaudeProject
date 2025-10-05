@@ -42,6 +42,15 @@
         window.focusElement = function(element) {
             element.focus();
         };
+
+        window.setupNavigationKeys = function(dotNetHelper) {
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+                    e.preventDefault();
+                    dotNetHelper.invokeMethodAsync('OnNavigationKey', e.key === 'ArrowUp');
+                }
+            });
+        };
     </script>
 </body>
 
