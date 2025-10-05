@@ -12,6 +12,7 @@ message MessageRequest {
   optional string sender = 1;
   optional string content = 2;
   optional int64 timestamp = 3;
+  optional string recipient = 4;
 }
 
 message MessageResponse {

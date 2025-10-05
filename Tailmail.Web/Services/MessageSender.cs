@@ -34,7 +34,8 @@ public class MessageSender
             {
                 Sender = settings.UserName ?? "Anonymous",
                 Content = messageContent,
-                Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                Recipient = peerName
             };
 
             var response = await client.SendMessageAsync(request);
