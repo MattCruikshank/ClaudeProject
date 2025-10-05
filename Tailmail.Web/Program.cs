@@ -4,13 +4,19 @@ using Tailmail.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add command line configuration
+builder.Configuration.AddCommandLine(args);
+
+// Get settings file from command line or use default
+var settingsFileName = builder.Configuration["settings"];
+
 // Add services to the container.
 builder.Services.AddGrpc();
 builder.Services.AddSingleton<MessageStore>();
-builder.Services.AddSingleton<SettingsService>();
+builder.Services.AddSingleton(new SettingsService(settingsFileName));
 
 // Load settings to get port configuration
-var settingsService = new SettingsService();
+var settingsService = new SettingsService(settingsFileName);
 var settings = settingsService.GetSettings();
 var grpcPort = settings.GrpcPort != 0 ? settings.GrpcPort : 5245;
 var httpPort = settings.HttpPort != 0 ? settings.HttpPort : 5246;

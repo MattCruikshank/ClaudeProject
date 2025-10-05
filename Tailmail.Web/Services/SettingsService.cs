@@ -10,9 +10,10 @@ public class SettingsService
     private Settings _settings;
     public event Action? OnSettingsChanged;
 
-    public SettingsService()
+    public SettingsService(string? settingsFileName = null)
     {
-        _settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".tailmail", "settings.json");
+        var fileName = settingsFileName ?? "settings.json";
+        _settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".tailmail", fileName);
         _settings = new Settings();
         LoadSettings();
     }
