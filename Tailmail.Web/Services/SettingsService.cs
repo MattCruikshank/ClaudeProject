@@ -8,6 +8,7 @@ public class SettingsService
 {
     private readonly string _settingsPath;
     private Settings _settings;
+    public event Action? OnSettingsChanged;
 
     public SettingsService()
     {
@@ -33,6 +34,8 @@ public class SettingsService
 
         var json = JsonFormatter.Default.Format(_settings);
         File.WriteAllText(_settingsPath, json);
+
+        OnSettingsChanged?.Invoke();
     }
 
     private void LoadSettings()

@@ -1,6 +1,7 @@
 @rendermode InteractiveServer
 @using Tailmail.Web.Services
 @inject MessageStore MessageStore
+@inject SettingsService SettingsService
 @implements IDisposable
 
 <div class="top-row ps-3 navbar navbar-dark">
@@ -19,11 +20,20 @@
             </NavLink>
         </div>
 
-        @foreach (var sender in senders)
+        @foreach (var peer in knownPeers)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="@($"sender/{Uri.EscapeDataString(peer)}")">
+                    <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @peer
+                </NavLink>
+            </div>
+        }
+
+        @foreach (var sender in unknownSenders)
         {
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="@($"sender/{Uri.EscapeDataString(sender)}")">
-                    <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @sender
+                    <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @sender*
                 </NavLink>
             </div>
         }
@@ -31,34 +41,55 @@
 </div>
 
 @code {
-    private List<string> senders = new();
+    private List<string> knownPeers = new();
+    private List<string> unknownSenders = new();
 
     protected override void OnInitialized()
     {
-        LoadSenders();
-        MessageStore.OnMessageAdded += OnMessageReceived;
+        LoadNavItems();
+        MessageStore.OnMessageAdded += OnDataChanged;
+        SettingsService.OnSettingsChanged += OnDataChanged;
     }
 
-    private void OnMessageReceived()
+    private void OnDataChanged()
     {
         InvokeAsync(() =>
         {
-            LoadSenders();
+            LoadNavItems();
             StateHasChanged();
         });
     }
 
-    private void LoadSenders()
+    private void LoadNavItems()
     {
-        senders = MessageStore.GetMessages()
-            .Select(m => m.Sender)
+        // Get all peer names from settings
+        var peerNames = SettingsService.GetSettings().Peers
+            .Select(p => p.UserName ?? string.Empty)
+            .Where(n => !string.IsNullOrWhiteSpace(n))
             .Distinct()
+            .OrderBy(n => n)
+            .ToList();
+
+        // Get all senders from messages
+        var messageSenders = MessageStore.GetMessages()
+            .Select(m => m.Sender ?? string.Empty)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct()
+            .ToHashSet();
+
+        // Known peers (all peers from settings)
+        knownPeers = peerNames;
+
+        // Unknown senders (senders from messages that don't match any peer)
+        unknownSenders = messageSenders
+            .Where(s => !peerNames.Contains(s))
             .OrderBy(s => s)
             .ToList();
     }
 
     public void Dispose()
     {
-        MessageStore.OnMessageAdded -= OnMessageReceived;
+        MessageStore.OnMessageAdded -= OnDataChanged;
+        SettingsService.OnSettingsChanged -= OnDataChanged;
     }
 }
