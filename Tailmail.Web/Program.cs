@@ -29,8 +29,8 @@ var httpPort = settings.HttpPort != 0 ? settings.HttpPort : 5246;
 // Configure Kestrel to support HTTP/2 without TLS
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.ListenLocalhost(grpcPort, o => o.Protocols = HttpProtocols.Http2);
-    options.ListenLocalhost(httpPort, o => o.Protocols = HttpProtocols.Http1);
+    options.ListenAnyIP(grpcPort, o => o.Protocols = HttpProtocols.Http2);
+    options.ListenAnyIP(httpPort, o => o.Protocols = HttpProtocols.Http1);
 });
 
 builder.Services.AddRazorComponents()
