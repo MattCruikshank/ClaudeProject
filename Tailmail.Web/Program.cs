@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Tailmail.Web.Components;
 using Tailmail.Web.Services;
 
+// dotnet run -- --settings=settings2.json
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add command line configuration
@@ -14,6 +16,7 @@ var settingsFileName = builder.Configuration["settings"];
 builder.Services.AddGrpc();
 builder.Services.AddSingleton<MessageStore>();
 builder.Services.AddSingleton(new SettingsService(settingsFileName));
+builder.Services.AddSingleton<MessageSender>();
 
 // Load settings to get port configuration
 var settingsService = new SettingsService(settingsFileName);

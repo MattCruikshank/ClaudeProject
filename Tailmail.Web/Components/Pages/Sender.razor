@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @using Tailmail.Web.Services
 @inject MessageStore MessageStore
+@inject MessageSender MessageSender
 @inject IJSRuntime JSRuntime
 @implements IDisposable
 
@@ -124,16 +125,18 @@
     {
         if (!string.IsNullOrWhiteSpace(replyMessage))
         {
-            // TODO: Implement message sending logic
-            ProcessMessage(replyMessage);
-            replyMessage = string.Empty;
-            await ScrollToBottom();
-        }
-    }
+            var success = await MessageSender.SendMessageToPeer(SenderName, replyMessage);
 
-    private void ProcessMessage(string message)
-    {
-        // Placeholder method for processing the message
+            if (success)
+            {
+                replyMessage = string.Empty;
+                await ScrollToBottom();
+            }
+            else
+            {
+                // TODO: Show error message to user
+            }
+        }
     }
 
     public void Dispose()
