@@ -14,6 +14,7 @@ builder.WebHost.ConfigureKestrel(options =>
 // Add services to the container.
 builder.Services.AddGrpc();
 builder.Services.AddSingleton<MessageStore>();
+builder.Services.AddSingleton<SettingsService>();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

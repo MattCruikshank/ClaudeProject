@@ -1,0 +1,336 @@
+@page "/settings"
+@rendermode InteractiveServer
+@using Tailmail.Web.Services
+@using Tailmail.Protos
+@inject SettingsService SettingsService
+
+<PageTitle>Settings - Tailmail</PageTitle>
+
+<h1>Settings</h1>
+
+<div class="settings-form">
+    <div class="form-group">
+        <label for="userName">Your Name:</label>
+        <input type="text" id="userName" class="form-control" @bind="userName" />
+    </div>
+
+    <div class="section">
+        <div class="section-header">
+            <h2>Peers</h2>
+            <button class="btn btn-icon" @onclick="AddNewPeer">Add</button>
+        </div>
+
+        <div class="peers-list">
+            @foreach (var peer in peers)
+            {
+                <div class="peer-editor">
+                    <div class="peer-header">
+                        <label>Name:</label>
+                        <button class="btn btn-icon-small" @onclick="() => ConfirmDeletePeer(peer)">🗑️</button>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" class="form-control" @bind="peer.UserName" />
+                    </div>
+                    <div class="form-group">
+                        <label>Server:</label>
+                        <input type="text" class="form-control" @bind="peer.Server" placeholder="http://localhost:5245" />
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="button-group">
+        <button class="btn btn-primary" @onclick="ApplySettings">Apply</button>
+        <button class="btn btn-secondary" @onclick="ConfirmCancelChanges">Cancel</button>
+    </div>
+</div>
+
+@if (showDeleteModal)
+{
+    <div class="modal-overlay" @onclick="CancelDelete">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <h3>Confirm Delete</h3>
+            <p>Are you sure you want to delete Peer @(peerToDelete?.UserName ?? "Unnamed")?</p>
+            <div class="modal-buttons">
+                <button class="btn btn-danger" @onclick="ConfirmDelete">Delete</button>
+                <button class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showCancelModal)
+{
+    <div class="modal-overlay" @onclick="CancelDiscardChanges">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <h3>Discard Changes</h3>
+            <p>Discard all settings changes?</p>
+            <div class="modal-buttons">
+                <button class="btn btn-danger" @onclick="ConfirmDiscardChanges">Discard</button>
+                <button class="btn btn-secondary" @onclick="CancelDiscardChanges">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string userName = string.Empty;
+    private List<Peer> peers = new();
+    private bool showDeleteModal = false;
+    private Peer? peerToDelete = null;
+    private bool showCancelModal = false;
+
+    protected override void OnInitialized()
+    {
+        LoadSettings();
+    }
+
+    private void LoadSettings()
+    {
+        var settings = SettingsService.GetSettings();
+        userName = settings.UserName ?? string.Empty;
+        // Create new Peer objects to avoid modifying the original settings
+        peers = settings.Peers.Select(p => new Peer
+        {
+            UserName = p.UserName,
+            Server = p.Server
+        }).ToList();
+    }
+
+    private void AddNewPeer()
+    {
+        var newPeer = new Peer
+        {
+            UserName = "",
+            Server = "http://localhost:5245"
+        };
+        peers.Add(newPeer);
+    }
+
+    private void ConfirmDeletePeer(Peer peer)
+    {
+        peerToDelete = peer;
+        showDeleteModal = true;
+    }
+
+    private void ConfirmDelete()
+    {
+        if (peerToDelete != null)
+        {
+            peers.Remove(peerToDelete);
+            peerToDelete = null;
+        }
+        showDeleteModal = false;
+    }
+
+    private void CancelDelete()
+    {
+        peerToDelete = null;
+        showDeleteModal = false;
+    }
+
+    private void ConfirmCancelChanges()
+    {
+        showCancelModal = true;
+    }
+
+    private void ConfirmDiscardChanges()
+    {
+        LoadSettings();
+        showCancelModal = false;
+    }
+
+    private void CancelDiscardChanges()
+    {
+        showCancelModal = false;
+    }
+
+    private void ApplySettings()
+    {
+        var settings = new Tailmail.Protos.Settings
+        {
+            UserName = userName
+        };
+        settings.Peers.AddRange(peers);
+        SettingsService.SaveSettings(settings);
+    }
+}
+
+<style>
+    .settings-form {
+        max-width: 800px;
+        margin-top: 20px;
+    }
+
+    .section {
+        margin-top: 30px;
+        padding-top: 30px;
+        border-top: 1px solid #ddd;
+    }
+
+    .section h2 {
+        margin-bottom: 20px;
+        font-size: 1.5rem;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .section-header h2 {
+        margin-bottom: 0;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+
+    .peers-list {
+        margin-bottom: 15px;
+    }
+
+    .peer-editor {
+        margin-bottom: 20px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+
+    .peer-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 5px;
+    }
+
+    .peer-header label {
+        margin-bottom: 0;
+        font-weight: bold;
+    }
+
+    .btn-icon {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 8px 12px;
+        font-size: 18px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .btn-icon:hover {
+        background-color: #0056b3;
+    }
+
+    .btn-icon-small {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .btn-icon-small:hover {
+        background-color: #c82333;
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background-color: white;
+        padding: 30px;
+        border-radius: 8px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-content h3 {
+        margin-top: 0;
+        margin-bottom: 15px;
+    }
+
+    .modal-content p {
+        margin-bottom: 20px;
+    }
+
+    .modal-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    .button-group {
+        margin-top: 30px;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-right: 10px;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background-color: #5a6268;
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background-color: #c82333;
+    }
+</style>
