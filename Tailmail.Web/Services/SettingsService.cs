@@ -33,7 +33,10 @@ public class SettingsService
         }
 
         var json = JsonFormatter.Default.Format(_settings);
-        File.WriteAllText(_settingsPath, json);
+        // Re-format the JSON with proper indentation using System.Text.Json
+        var jsonDocument = JsonDocument.Parse(json);
+        var formattedJson = JsonSerializer.Serialize(jsonDocument, new JsonSerializerOptions { WriteIndented = true });
+        File.WriteAllText(_settingsPath, formattedJson);
 
         OnSettingsChanged?.Invoke();
     }

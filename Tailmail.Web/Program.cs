@@ -4,17 +4,23 @@ using Tailmail.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure Kestrel to support HTTP/2 without TLS
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.ListenLocalhost(5245, o => o.Protocols = HttpProtocols.Http2);
-    options.ListenLocalhost(5246, o => o.Protocols = HttpProtocols.Http1);
-});
-
 // Add services to the container.
 builder.Services.AddGrpc();
 builder.Services.AddSingleton<MessageStore>();
 builder.Services.AddSingleton<SettingsService>();
+
+// Load settings to get port configuration
+var settingsService = new SettingsService();
+var settings = settingsService.GetSettings();
+var grpcPort = settings.GrpcPort != 0 ? settings.GrpcPort : 5245;
+var httpPort = settings.HttpPort != 0 ? settings.HttpPort : 5246;
+
+// Configure Kestrel to support HTTP/2 without TLS
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenLocalhost(grpcPort, o => o.Protocols = HttpProtocols.Http2);
+    options.ListenLocalhost(httpPort, o => o.Protocols = HttpProtocols.Http1);
+});
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

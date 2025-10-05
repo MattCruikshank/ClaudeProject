@@ -12,4 +12,6 @@ message Peer {
 message Settings {
   optional string user_name = 1;
   repeated Peer peers = 2;
+  optional int32 http_port = 3;
+  optional int32 grpc_port = 4;
 }
