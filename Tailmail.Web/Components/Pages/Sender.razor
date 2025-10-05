@@ -76,6 +76,7 @@
         if (firstRender)
         {
             await JSRuntime.InvokeVoidAsync("setupEnterKeyHandler", textareaRef, dotNetHelper);
+            await JSRuntime.InvokeVoidAsync("focusElement", textareaRef);
         }
         await ScrollToBottom();
     }
@@ -261,6 +262,7 @@
 
     .message-content {
         font-size: 16px;
+        white-space: pre-wrap;
     }
 
     .message-content.error {
