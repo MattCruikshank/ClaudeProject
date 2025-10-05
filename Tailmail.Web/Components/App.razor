@@ -19,6 +19,25 @@
         window.scrollToBottom = function(element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'end' });
         };
+
+        window.setupEnterKeyHandler = function(textarea, dotNetHelper) {
+            textarea.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    var message = textarea.value;
+                    textarea.value = '';
+                    dotNetHelper.invokeMethodAsync('OnEnterPressed', message);
+                }
+            });
+        };
+
+        window.getTextareaValue = function(textarea) {
+            return textarea.value;
+        };
+
+        window.clearTextarea = function(textarea) {
+            textarea.value = '';
+        };
     </script>
 </body>
 

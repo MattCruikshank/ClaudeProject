@@ -46,11 +46,8 @@
     </div>
 
     <div class="reply-section">
-        <textarea class="reply-input"
-                  value="@replyMessage"
-                  @oninput="@(e => replyMessage = e.Value?.ToString() ?? string.Empty)"
-                  @onkeydown="HandleKeyDown"
-                  @onkeydown:preventDefault="@shouldPreventDefault"
+        <textarea @ref="textareaRef"
+                  class="reply-input"
                   placeholder="Type your message to @SenderName..."></textarea>
         <button class="send-button" @onclick="SendMessage">Send</button>
     </div>
@@ -63,17 +60,23 @@
     private List<Tailmail.Protos.MessageRequest> allMessages = new();
     private string replyMessage = string.Empty;
     private ElementReference messagesEnd;
-    private bool shouldPreventDefault = false;
+    private ElementReference textareaRef;
+    private DotNetObjectReference<Sender>? dotNetHelper;
 
     protected override void OnInitialized()
     {
         LoadMessages();
         MessageStore.OnMessageAdded += OnMessageReceived;
         SentMessageStore.OnMessageAdded += OnMessageReceived;
+        dotNetHelper = DotNetObjectReference.Create(this);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("setupEnterKeyHandler", textareaRef, dotNetHelper);
+        }
         await ScrollToBottom();
     }
 
@@ -127,25 +130,28 @@
         return dt.ToString("yyyy-MM-dd HH:mm:ss");
     }
 
-    private async Task HandleKeyDown(KeyboardEventArgs e)
+    [JSInvokable]
+    public async Task OnEnterPressed(string message)
     {
-        shouldPreventDefault = e.Key == "Enter" && !e.ShiftKey;
-
-        if (shouldPreventDefault)
-        {
-            await SendMessage();
-        }
+        await SendMessageWithContent(message);
+        StateHasChanged();
     }
 
     private async Task SendMessage()
     {
-        if (!string.IsNullOrWhiteSpace(replyMessage))
+        var message = await JSRuntime.InvokeAsync<string>("getTextareaValue", textareaRef);
+        await SendMessageWithContent(message);
+        await JSRuntime.InvokeVoidAsync("clearTextarea", textareaRef);
+    }
+
+    private async Task SendMessageWithContent(string messageContent)
+    {
+        if (!string.IsNullOrWhiteSpace(messageContent))
         {
-            var success = await MessageSender.SendMessageToPeer(SenderName, replyMessage);
+            var success = await MessageSender.SendMessageToPeer(SenderName, messageContent);
 
             if (success)
             {
-                replyMessage = string.Empty;
                 await ScrollToBottom();
             }
             else
@@ -159,6 +165,7 @@
     {
         MessageStore.OnMessageAdded -= OnMessageReceived;
         SentMessageStore.OnMessageAdded -= OnMessageReceived;
+        dotNetHelper?.Dispose();
     }
 }
 
