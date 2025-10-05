@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @using Tailmail.Web.Services
 @inject MessageStore MessageStore
+@inject SentMessageStore SentMessageStore
 @inject MessageSender MessageSender
 @inject IJSRuntime JSRuntime
 @implements IDisposable
@@ -14,21 +15,29 @@
     </div>
 
     <div class="messages-container">
-        @if (!messages.Any())
+        @if (!allMessages.Any())
         {
-            <p>No messages from @SenderName yet.</p>
+            <p>No messages with @SenderName yet.</p>
         }
         else
         {
             <div class="messages">
-                @foreach (var message in messages)
+                @foreach (var message in allMessages)
                 {
-                    <div class="message-card">
+                    var isSent = message.Recipient == SenderName;
+                    var hasError = !string.IsNullOrEmpty(message.ErrorMessage);
+                    <div class="message-card @(isSent ? "sent" : "received")">
                         <div class="message-header">
                             <strong>@message.Sender</strong>
-                            <span class="timestamp">@FormatTimestamp(message.Timestamp)</span>
                         </div>
-                        <div class="message-content">@message.Content</div>
+                        <div class="message-content @(hasError ? "error" : "")">
+                            @message.Content
+                        </div>
+                        @if (hasError)
+                        {
+                            <div class="error-message">@message.ErrorMessage</div>
+                        }
+                        <span class="timestamp-popup">@FormatTimestamp(message.Timestamp)</span>
                     </div>
                 }
                 <div @ref="messagesEnd"></div>
@@ -38,10 +47,10 @@
 
     <div class="reply-section">
         <textarea class="reply-input"
-                  @bind="replyMessage"
-                  @bind:event="oninput"
+                  value="@replyMessage"
+                  @oninput="@(e => replyMessage = e.Value?.ToString() ?? string.Empty)"
                   @onkeydown="HandleKeyDown"
-                  @onkeydown:preventDefault="preventEnter"
+                  @onkeydown:preventDefault="@shouldPreventDefault"
                   placeholder="Type your message to @SenderName..."></textarea>
         <button class="send-button" @onclick="SendMessage">Send</button>
     </div>
@@ -51,15 +60,16 @@
     [Parameter]
     public string SenderName { get; set; } = string.Empty;
 
-    private List<Tailmail.Protos.MessageRequest> messages = new();
+    private List<Tailmail.Protos.MessageRequest> allMessages = new();
     private string replyMessage = string.Empty;
-    private bool preventEnter = false;
     private ElementReference messagesEnd;
+    private bool shouldPreventDefault = false;
 
     protected override void OnInitialized()
     {
         LoadMessages();
         MessageStore.OnMessageAdded += OnMessageReceived;
+        SentMessageStore.OnMessageAdded += OnMessageReceived;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -96,8 +106,17 @@
 
     private void LoadMessages()
     {
-        messages = MessageStore.GetMessages()
-            .Where(m => m.Sender == SenderName)
+        // Get received messages from this sender
+        var receivedMessages = MessageStore.GetMessages()
+            .Where(m => m.Sender == SenderName);
+
+        // Get sent messages to this sender
+        var sentMessages = SentMessageStore.GetMessages()
+            .Where(m => m.Recipient == SenderName);
+
+        // Merge and sort by timestamp
+        allMessages = receivedMessages
+            .Concat(sentMessages)
             .OrderBy(m => m.Timestamp)
             .ToList();
     }
@@ -110,14 +129,11 @@
 
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter" && !e.ShiftKey)
+        shouldPreventDefault = e.Key == "Enter" && !e.ShiftKey;
+
+        if (shouldPreventDefault)
         {
-            preventEnter = true;
             await SendMessage();
-        }
-        else
-        {
-            preventEnter = false;
         }
     }
 
@@ -142,6 +158,7 @@
     public void Dispose()
     {
         MessageStore.OnMessageAdded -= OnMessageReceived;
+        SentMessageStore.OnMessageAdded -= OnMessageReceived;
     }
 }
 
@@ -191,7 +208,21 @@
         border-radius: 5px;
         padding: 15px;
         margin-bottom: 10px;
+        max-width: 70%;
+        min-width: 200px;
+        position: relative;
+    }
+
+    .message-card.received {
         background-color: #f9f9f9;
+        align-self: flex-start;
+        margin-right: auto;
+    }
+
+    .message-card.sent {
+        background-color: #d4edff;
+        align-self: flex-end;
+        margin-left: auto;
     }
 
     .message-header {
@@ -201,12 +232,39 @@
         font-size: 14px;
     }
 
-    .timestamp {
-        color: #666;
+    .timestamp-popup {
+        position: absolute;
+        top: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+    }
+
+    .message-card:hover .timestamp-popup {
+        opacity: 1;
     }
 
     .message-content {
         font-size: 16px;
+    }
+
+    .message-content.error {
+        font-style: italic;
+    }
+
+    .error-message {
+        font-size: 12px;
+        color: #dc3545;
+        font-style: italic;
+        margin-top: 5px;
     }
 
     .reply-section {

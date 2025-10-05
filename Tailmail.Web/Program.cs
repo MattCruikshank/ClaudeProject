@@ -15,6 +15,7 @@ var settingsFileName = builder.Configuration["settings"];
 // Add services to the container.
 builder.Services.AddGrpc();
 builder.Services.AddSingleton<MessageStore>();
+builder.Services.AddSingleton<SentMessageStore>();
 builder.Services.AddSingleton(new SettingsService(settingsFileName));
 builder.Services.AddSingleton<MessageSender>();
 
