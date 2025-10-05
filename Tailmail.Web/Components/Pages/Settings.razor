@@ -3,6 +3,8 @@
 @using Tailmail.Web.Services
 @using Tailmail.Protos
 @inject SettingsService SettingsService
+@inject MessageStore MessageStore
+@inject SentMessageStore SentMessageStore
 
 <PageTitle>Settings - Tailmail</PageTitle>
 
@@ -66,7 +68,7 @@
     <div class="modal-overlay" @onclick="CancelDelete">
         <div class="modal-content" @onclick:stopPropagation="true">
             <h3>Confirm Delete</h3>
-            <p>Are you sure you want to delete Peer @(peerToDelete?.UserName ?? "Unnamed")?</p>
+            <p>Are you sure you want to delete Peer @(peerToDelete?.UserName ?? "Unnamed") and all of the messages?</p>
             <div class="modal-buttons">
                 <button class="btn btn-danger" @onclick="ConfirmDelete">Delete</button>
                 <button class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
@@ -92,6 +94,7 @@
 @code {
     private string userName = string.Empty;
     private List<Peer> peers = new();
+    private List<Peer> originalPeers = new();
     private int httpPort = 5246;
     private int grpcPort = 5245;
     private bool showDeleteModal = false;
@@ -110,6 +113,11 @@
         httpPort = settings.HttpPort != 0 ? settings.HttpPort : 5246;
         grpcPort = settings.GrpcPort != 0 ? settings.GrpcPort : 5245;
         // Create new Peer objects to avoid modifying the original settings
+        originalPeers = settings.Peers.Select(p => new Peer
+        {
+            UserName = p.UserName,
+            Server = p.Server
+        }).ToList();
         peers = settings.Peers.Select(p => new Peer
         {
             UserName = p.UserName,
@@ -167,6 +175,20 @@
 
     private void ApplySettings()
     {
+        // Find deleted peers by comparing original and current peer lists
+        var deletedPeerNames = originalPeers
+            .Where(op => !peers.Any(p => p.UserName == op.UserName))
+            .Select(p => p.UserName ?? string.Empty)
+            .Where(n => !string.IsNullOrWhiteSpace(n))
+            .ToList();
+
+        // Delete messages for deleted peers
+        foreach (var peerName in deletedPeerNames)
+        {
+            MessageStore.DeleteMessagesBySender(peerName);
+            SentMessageStore.DeleteMessagesByRecipient(peerName);
+        }
+
         var settings = new Tailmail.Protos.Settings
         {
             UserName = userName,
@@ -175,6 +197,13 @@
         };
         settings.Peers.AddRange(peers);
         SettingsService.SaveSettings(settings);
+
+        // Update original peers to reflect the new saved state
+        originalPeers = peers.Select(p => new Peer
+        {
+            UserName = p.UserName,
+            Server = p.Server
+        }).ToList();
     }
 }
 

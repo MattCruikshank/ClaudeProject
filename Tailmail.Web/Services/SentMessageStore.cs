@@ -5,7 +5,7 @@ namespace Tailmail.Web.Services;
 
 public class SentMessageStore
 {
-    private readonly ConcurrentBag<MessageRequest> _messages = new();
+    private ConcurrentBag<MessageRequest> _messages = new();
     public event Action? OnMessageAdded;
 
     public void AddMessage(MessageRequest message)
@@ -17,5 +17,11 @@ public class SentMessageStore
     public IEnumerable<MessageRequest> GetMessages()
     {
         return _messages.OrderByDescending(m => m.Timestamp);
+    }
+
+    public void DeleteMessagesByRecipient(string recipientName)
+    {
+        _messages = new ConcurrentBag<MessageRequest>(_messages.Where(m => m.Recipient != recipientName));
+        OnMessageAdded?.Invoke();
     }
 }

@@ -5,7 +5,7 @@ namespace Tailmail.Web.Services;
 
 public class MessageStore
 {
-    private readonly ConcurrentBag<MessageRequest> _messages = new();
+    private ConcurrentBag<MessageRequest> _messages = new();
     public event Action? OnMessageAdded;
 
     public void AddMessage(MessageRequest message)
@@ -17,5 +17,11 @@ public class MessageStore
     public IEnumerable<MessageRequest> GetMessages()
     {
         return _messages.OrderByDescending(m => m.Timestamp);
+    }
+
+    public void DeleteMessagesBySender(string senderName)
+    {
+        _messages = new ConcurrentBag<MessageRequest>(_messages.Where(m => m.Sender != senderName));
+        OnMessageAdded?.Invoke();
     }
 }
