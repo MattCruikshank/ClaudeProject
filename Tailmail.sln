@@ -5,8 +5,6 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tailmail.Protos", "Tailmail.Protos\Tailmail.Protos.csproj", "{446CCE91-801E-418C-945F-33219AE1C6AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tailmail.Cli", "Tailmail.Cli\Tailmail.Cli.csproj", "{C82C8AAA-1590-4A3A-8F6D-B34CB193D762}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tailmail.Web", "Tailmail.Web\Tailmail.Web.csproj", "{8288E2B0-5863-4075-8622-09C96F6DA173}"
 EndProject
 Global
@@ -22,10 +20,6 @@ Global
 		{446CCE91-801E-418C-945F-33219AE1C6AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{446CCE91-801E-418C-945F-33219AE1C6AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{446CCE91-801E-418C-945F-33219AE1C6AE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C82C8AAA-1590-4A3A-8F6D-B34CB193D762}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C82C8AAA-1590-4A3A-8F6D-B34CB193D762}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C82C8AAA-1590-4A3A-8F6D-B34CB193D762}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C82C8AAA-1590-4A3A-8F6D-B34CB193D762}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8288E2B0-5863-4075-8622-09C96F6DA173}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8288E2B0-5863-4075-8622-09C96F6DA173}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8288E2B0-5863-4075-8622-09C96F6DA173}.Release|Any CPU.ActiveCfg = Release|Any CPU
