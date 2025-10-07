@@ -28,8 +28,15 @@ echo "Starting application in background..."
 gosu appuser dotnet Tailmail.Web.dll "$@" &
 APP_PID=$!
 
-# Trap signals and forward them to the app
-trap "kill -TERM $APP_PID 2>/dev/null" SIGTERM SIGINT
+# Trap signals to logout from Tailscale and stop the app
+cleanup() {
+    echo "Shutting down..."
+    tailscale logout
+    kill -TERM $APP_PID 2>/dev/null
+    wait $APP_PID 2>/dev/null
+    exit 0
+}
+trap cleanup SIGTERM SIGINT
 
 echo "Waiting for application to start..."
 sleep 20
