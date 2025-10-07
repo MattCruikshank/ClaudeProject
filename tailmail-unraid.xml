@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>Tailmail</Name>
+  <Repository>mattcruikshank/tailmail:latest</Repository>
+  <Registry>https://hub.docker.com/r/mattcruikshank/tailmail</Registry>
+  <Network>bridge</Network>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/MattCruikshank/ClaudeProject/issues</Support>
+  <Project>https://github.com/MattCruikshank/ClaudeProject</Project>
+  <Overview>Tailmail - Secure peer-to-peer messaging over Tailscale. Each instance runs as its own Tailscale node and communicates messages over gRPC.</Overview>
+  <Category>Network:Messaging Status:Stable</Category>
+  <WebUI></WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/mattcruikshank/ClaudeProject/master/tailmail-unraid.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/mattcruikshank/tailmail/master/tailmail.png</Icon>
+  <ExtraParams>--cap-add=NET_ADMIN --device=/dev/net/tun</ExtraParams>
+  <PostArgs></PostArgs>
+  <CPUset></CPUset>
+  <DateInstalled></DateInstalled>
+  <DonateText></DonateText>
+  <DonateLink></DonateLink>
+  <Description>Tailmail - Secure peer-to-peer messaging over Tailscale. Each container becomes its own Tailscale node on your tailnet.</Description>
+  <Networking>
+    <Mode>bridge</Mode>
+  </Networking>
+  <Data>
+    <Volume>
+      <HostDir>/mnt/user/appdata/tailmail</HostDir>
+      <ContainerDir>/home/appuser/.tailmail</ContainerDir>
+      <Mode>rw</Mode>
+    </Volume>
+  </Data>
+  <Environment>
+    <Variable>
+      <Value></Value>
+      <Name>TS_AUTHKEY</Name>
+      <Mode></Mode>
+    </Variable>
+    <Variable>
+      <Value>tailmail</Value>
+      <Name>TS_HOSTNAME</Name>
+      <Mode></Mode>
+    </Variable>
+  </Environment>
+  <Labels>
+  </Labels>
+  <Config Name="Tailscale Auth Key" Target="TS_AUTHKEY" Default="" Mode="" Description="Get from https://login.tailscale.com/admin/settings/keys - Enable 'Reusable' option" Type="Variable" Display="always" Required="true" Mask="true"></Config>
+  <Config Name="Tailscale Hostname" Target="TS_HOSTNAME" Default="tailmail" Mode="" Description="Hostname for this Tailscale node on your tailnet" Type="Variable" Display="always" Required="true" Mask="false"></Config>
+  <Config Name="Settings Directory" Target="/home/appuser/.tailmail" Default="/mnt/user/appdata/tailmail" Mode="rw" Description="Directory containing your settings file (settings.json, matt.json, etc)" Type="Path" Display="always" Required="true" Mask="false"></Config>
+  <Config Name="Settings Filename" Target="--settings" Default="settings.json" Mode="" Description="Name of the settings file to use (e.g., matt.json, jacob.json)" Type="Variable" Display="always" Required="false" Mask="false"></Config>
+</Container>

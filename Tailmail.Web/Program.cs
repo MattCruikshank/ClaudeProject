@@ -82,7 +82,15 @@ sudo docker build -t tailmail .
     tailmail
 
 //////////////////////////////
-/// 
+sudo docker login
+sudo docker tag tailmail mattcruikshank/tailmail:latest
+sudo docker push mattcruikshank/tailmail:latest
+//////////////////////////////
+ - In Unraid, go to Docker tab
+  - Click Add Container
+  - Click Template repositories
+  - Add your template URL:
+  https://raw.githubusercontent.com/yourusername/unraid-templates/master/tailmail-unraid-template.xml
 */
 
 var builder = WebApplication.CreateBuilder(args);
