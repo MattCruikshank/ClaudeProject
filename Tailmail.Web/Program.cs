@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Tailmail.Web.Components;
 using Tailmail.Web.Services;
+using Tailmail.Web.Middleware;
 
-// dotnet run -- --settings=settings2.json
+// dotnet run -- --settings=matt.json
+// sudo tailscale serve --bg 5200
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +51,15 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 
 app.MapGrpcService<MessageServiceImpl>();
+
+// Apply Tailscale authentication only to web routes
+app.UseWhen(
+    context => context.Request.Path.StartsWithSegments("/_framework") ||
+               context.Request.Path.StartsWithSegments("/_blazor") ||
+               context.Request.Path == "/" ||
+               !context.Request.ContentType?.Contains("application/grpc") == true,
+    appBuilder => appBuilder.UseMiddleware<TailscaleAuthMiddleware>()
+);
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

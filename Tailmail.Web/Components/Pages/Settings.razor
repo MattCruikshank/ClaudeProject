@@ -29,6 +29,12 @@
             <label for="grpcPort">gRPC Port:</label>
             <input type="number" id="grpcPort" class="form-control" @bind="grpcPort" />
         </div>
+
+        <div class="form-group">
+            <label for="allowedWebUser">Allowed Web User (Tailscale):</label>
+            <input type="text" id="allowedWebUser" class="form-control" @bind="allowedWebUser" placeholder="user@example.com (leave empty to allow all)" />
+            <small class="form-text">Only this Tailscale user can access the web interface. gRPC remains open to all.</small>
+        </div>
     </div>
 
     <div class="section">
@@ -97,6 +103,7 @@
     private List<Peer> originalPeers = new();
     private int httpPort = 5246;
     private int grpcPort = 5245;
+    private string allowedWebUser = string.Empty;
     private bool showDeleteModal = false;
     private Peer? peerToDelete = null;
     private bool showCancelModal = false;
@@ -112,6 +119,7 @@
         userName = settings.UserName ?? string.Empty;
         httpPort = settings.HttpPort != 0 ? settings.HttpPort : 5246;
         grpcPort = settings.GrpcPort != 0 ? settings.GrpcPort : 5245;
+        allowedWebUser = settings.AllowedWebUser ?? string.Empty;
         // Create new Peer objects to avoid modifying the original settings
         originalPeers = settings.Peers.Select(p => new Peer
         {
@@ -193,7 +201,8 @@
         {
             UserName = userName,
             HttpPort = httpPort,
-            GrpcPort = grpcPort
+            GrpcPort = grpcPort,
+            AllowedWebUser = allowedWebUser
         };
         settings.Peers.AddRange(peers);
         SettingsService.SaveSettings(settings);
@@ -243,6 +252,13 @@
         display: block;
         margin-bottom: 5px;
         font-weight: bold;
+    }
+
+    .form-text {
+        display: block;
+        margin-top: 5px;
+        color: #666;
+        font-size: 14px;
     }
 
     .form-control {

@@ -14,4 +14,5 @@ message Settings {
   repeated Peer peers = 2;
   optional int32 http_port = 3;
   optional int32 grpc_port = 4;
+  optional string allowed_web_user = 5;
 }
