@@ -19,7 +19,7 @@ tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/var/run/tailsca
 sleep 2
 
 echo "Authenticating with Tailscale as ${TS_HOSTNAME}..."
-tailscale up --authkey="${TS_AUTHKEY}" --hostname="${TS_HOSTNAME}" --accept-routes
+tailscale up --authkey="${TS_AUTHKEY}" --hostname="${TS_HOSTNAME}" --accept-routes --accept-dns=false
 
 echo "Tailscale is up! Status:"
 tailscale status
