@@ -35,8 +35,16 @@ echo "Waiting for application to start..."
 sleep 20
 
 echo "Configuring Tailscale serve..."
-tailscale serve --bg --set-path=/ http://localhost:8080
-tailscale serve --bg --https=8081 --set-path=/ http://localhost:8081
+# Use TS_SERVE_HTTPS=false to serve over HTTP (avoids Let's Encrypt rate limits during testing)
+if [ "${TS_SERVE_HTTPS:-true}" = "true" ]; then
+    echo "Serving with HTTPS (Let's Encrypt certificates)"
+    tailscale serve --bg --set-path=/ http://localhost:8080
+    tailscale serve --bg --https=8081 --set-path=/ http://localhost:8081
+else
+    echo "Serving with HTTP only (no Let's Encrypt)"
+    tailscale serve --bg --http=443 --set-path=/ http://localhost:8080
+    tailscale serve --bg --http=8081 --set-path=/ http://localhost:8081
+fi
 
 echo "Setup complete! Waiting for application..."
 wait $APP_PID

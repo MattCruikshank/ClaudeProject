@@ -70,6 +70,7 @@ sudo docker build -t tailmail .
     --cap-add=NET_ADMIN --device=/dev/net/tun \
     --env-file .env \
     -e TS_HOSTNAME=tailmail-matt \
+     -e TS_SERVE_HTTPS=false \
     -v ~/.tailmail/matt.json:/home/appuser/.tailmail/settings.json \
     tailmail
 
@@ -78,6 +79,7 @@ sudo docker build -t tailmail .
     --cap-add=NET_ADMIN --device=/dev/net/tun \
     --env-file .env \
     -e TS_HOSTNAME=tailmail-jacob \
+    -e TS_SERVE_HTTPS=false \
     -v ~/.tailmail/jacob.json:/home/appuser/.tailmail/settings.json \
     tailmail
 
